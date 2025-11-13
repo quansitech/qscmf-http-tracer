@@ -1,0 +1,30 @@
+{
+  "name": "quansitech/qscmf-http-tracer",
+  "description": "qscmf http client trace logger",
+  "type": "library",
+  "keywords": ["thinkphp", "qscmf", "http", "client","logger", "trace"],
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "xhiny",
+      "email": "axhiny@163.com"
+    }
+  ],
+  "require": {
+    "php": ">=7.2.0",
+    "tiderjian/think-core":  ">=11.0.0",
+    "guzzlehttp/guzzle": "^6.4"
+  },
+  "autoload": {
+    "psr-4": {
+      "Qscmf\\HttpTracer\\": "src/"
+    }
+  },
+  "extra": {
+    "qscmf": {
+      "providers": [
+        "Qscmf\\HttpTracer\\HttpTracerProvider"
+      ]
+    }
+  }
+}
