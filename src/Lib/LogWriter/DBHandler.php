@@ -47,7 +47,9 @@ class DBHandler extends AbstractProcessingHandler implements LogWriterInterface
                     break;
             }
         } catch (\PDOException $e) {
-            error_log("TraceDatabaseHandler failed: " . $e->getMessage());
+            $this->logError($e, $context['stage'] ?? 'unknown', $context['unique_id'] ?? 'unknown', 'database_error');
+        } catch (\Exception $e) {
+            $this->logError($e, $context['stage'] ?? 'unknown', $context['unique_id'] ?? 'unknown', 'general_error');
         }
     }
 
@@ -75,7 +77,9 @@ class DBHandler extends AbstractProcessingHandler implements LogWriterInterface
             $r = D()->table($this->table_name)->bind($bind)->add($data);
 
         } catch (\PDOException $e) {
-            error_log("Failed to write initial request log: " . $e->getMessage());
+            $this->logError($e, 'start', $uniqueId, 'write_request_failed');
+        } catch (\Exception $e) {
+            $this->logError($e, 'start', $uniqueId, 'write_request_exception');
         }
     }
 
@@ -102,7 +106,27 @@ class DBHandler extends AbstractProcessingHandler implements LogWriterInterface
             $r = D()->table($this->table_name)->bind($bind)->where(['trace_id' => ':trace_id'])->save($data);
 
         } catch (\PDOException $e) {
-            error_log("Failed to update response log: " . $e->getMessage());
+            $this->logError($e, 'end', $uniqueId, 'write_response_failed');
+        } catch (\Exception $e) {
+            $this->logError($e, 'end', $uniqueId, 'write_response_exception');
         }
+    }
+
+    /**
+     * 记录错误日志，提供详细上下文信息
+     */
+    private function logError(\Exception $e, string $stage, string $uniqueId, string $context = ''): void
+    {
+        $message = sprintf(
+            "QSCMF HTTP Tracer Error [stage:%s, trace_id:%s, context:%s]: %s in %s:%d",
+            $stage,
+            $uniqueId,
+            $context ?: 'general',
+            $e->getMessage(),
+            $e->getFile(),
+            $e->getLine()
+        );
+        
+        error_log($message);
     }
 }
