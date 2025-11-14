@@ -27,7 +27,7 @@ class DBHandler extends AbstractProcessingHandler implements LogWriterInterface
             switch ($context['stage']) {
                 case 'start':
                     $this->writeRequest(
-                        $context['unique_id'],
+                        $context['trace_id'],
                         $context['start_time'],
                         $context['method'],
                         $context['url'],
@@ -38,7 +38,7 @@ class DBHandler extends AbstractProcessingHandler implements LogWriterInterface
 
                 case 'end':
                     $this->writeResponse(
-                        $context['unique_id'],
+                        $context['trace_id'],
                         $context['response_status_code'],
                         $context['response_headers'],
                         $context['response_body'],
@@ -47,9 +47,9 @@ class DBHandler extends AbstractProcessingHandler implements LogWriterInterface
                     break;
             }
         } catch (\PDOException $e) {
-            $this->logError($e, $context['stage'] ?? 'unknown', $context['unique_id'] ?? 'unknown', 'database_error');
+            $this->logError($e, $context['stage'] ?? 'unknown', $context['trace_id'] ?? 'unknown', 'database_error');
         } catch (\Exception $e) {
-            $this->logError($e, $context['stage'] ?? 'unknown', $context['unique_id'] ?? 'unknown', 'general_error');
+            $this->logError($e, $context['stage'] ?? 'unknown', $context['trace_id'] ?? 'unknown', 'general_error');
         }
     }
 
@@ -112,9 +112,6 @@ class DBHandler extends AbstractProcessingHandler implements LogWriterInterface
         }
     }
 
-    /**
-     * 记录错误日志，提供详细上下文信息
-     */
     private function logError(\Exception $e, string $stage, string $trace_id, string $context = ''): void
     {
         $message = sprintf(

@@ -18,7 +18,7 @@ class FileFormatter implements FormatterInterface
         switch ($context['stage']) {
             case 'start':
                 $log_entry = $this->formatRequest(
-                    $context['unique_id'],
+                    $context['trace_id'],
                     $context['start_time'],
                     $context['method'],
                     $context['url'],
@@ -29,7 +29,7 @@ class FileFormatter implements FormatterInterface
 
             case 'end':
                 $log_entry = $this->formatResponse(
-                    $context['unique_id'],
+                    $context['trace_id'],
                     $context['response_status_code'],
                     $context['response_headers'],
                     $context['response_body'],

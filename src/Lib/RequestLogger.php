@@ -16,7 +16,7 @@ class RequestLogger
 
     public function start(string $method, string $url, array $request_headers, string $request_body): string
     {
-        $trace_id = Str::uuid()->toString();
+        $trace_id = Str::uuid()->getHex();
         $this->writer->writeRequest(
             $trace_id,
             new \DateTimeImmutable('now'),

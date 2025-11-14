@@ -19,7 +19,7 @@ class MonologLogWriter implements LogWriterInterface
     ): void {
         $this->monolog->info('API Request Trace', [
             'stage' => 'start',
-            'unique_id' => $trace_id,
+            'trace_id' => $trace_id,
             'start_time' => $start_time,
             'method' => $method,
             'url' => $url,
@@ -34,7 +34,7 @@ class MonologLogWriter implements LogWriterInterface
     ): void {
         $this->monolog->info('API Request Trace', [
             'stage' => 'end',
-            'unique_id' => $trace_id,
+            'trace_id' => $trace_id,
             'response_status_code' => $response_status_code,
             'response_headers' => $response_headers,
             'response_body' => $response_body,
