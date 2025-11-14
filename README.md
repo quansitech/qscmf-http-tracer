@@ -22,6 +22,7 @@ composer require quansitech/qscmf-http-tracer
 在 `.env` 文件中添加：
 
 ```env
+# 若使用数据库存储，则
 # 存储接口请求日志的数据表名，如 api_requests_log，必填
 QSCMF_HTTP_TRACE_LOGGER_TABLE_NAME=api_requests_log
 ```
