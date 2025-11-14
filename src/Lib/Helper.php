@@ -16,4 +16,9 @@ class Helper{
 
     }
 
+    public static function getLogFilePath() : string {
+        return __DIR__ . '/../logs/qscmf_http_tracer.log';
+    }
+
+
 }

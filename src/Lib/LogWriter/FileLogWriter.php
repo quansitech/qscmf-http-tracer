@@ -2,29 +2,33 @@
 
 namespace Qscmf\HttpTracer\Lib\LogWriter;
 
-class FileLogWriter implements LogWriterInterface
+use Qscmf\HttpTracer\Lib\FileFormatter;
+use Qscmf\HttpTracer\Lib\Helper;
+
+class FileLogWriter  implements LogWriterInterface
 {
     private string $logFilePath;
+    private FileFormatter $file_formatter;
 
     public function __construct(string $logFilePath = '')
     {
-        $logFilePath = $logFilePath ?: __DIR__ . '/../../logs/'.date('Y_m_d').'_http_trace.log';
+        $logFilePath = $logFilePath ?: Helper::getLogFilePath();
         $directory = dirname($logFilePath);
         if (!is_dir($directory)) {
             mkdir($directory, 0775, true);
         }
         $this->logFilePath = $logFilePath;
+        $this->file_formatter = new FileFormatter();
     }
 
     public function writeRequest(string $uniqueId, \DateTimeImmutable $startTime, string $method, string $url, array $requestHeaders, string $requestBody): void
     {
-        $logEntry = sprintf(
-            "[%s] [%s] [START] %s %s\n--> Request Headers: %s\n--> Request Body: %s\n---\n",
-            $startTime->format('Y-m-d H:i:s.u'),
+        $logEntry = $this->file_formatter->formatRequest(
             $uniqueId,
+            $startTime,
             $method,
             $url,
-            json_encode($requestHeaders, JSON_UNESCAPED_UNICODE),
+            $requestHeaders,
             $requestBody
         );
 
@@ -38,15 +42,12 @@ class FileLogWriter implements LogWriterInterface
 
     public function writeResponse(string $uniqueId, int $responseStatusCode, array $responseHeaders, string $responseBody, float $durationMs): void
     {
-        $logEntry = sprintf(
-            "[%s] [%s] [END] Status: %d, Duration: %.2f ms\n--> Response Headers: %s\n--> Response Body: %s\n%s\n\n",
-            (new \DateTimeImmutable('now'))->format('Y-m-d H:i:s.u'),
+        $logEntry = $this->file_formatter->formatResponse(
             $uniqueId,
             $responseStatusCode,
+            $responseHeaders,
+            $responseBody,
             $durationMs,
-            json_encode($responseHeaders, JSON_UNESCAPED_UNICODE),
-            $this->truncate($responseBody),
-            str_repeat('=', 80)
         );
 
         $r = file_put_contents($this->logFilePath, $logEntry, FILE_APPEND);
@@ -57,8 +58,4 @@ class FileLogWriter implements LogWriterInterface
         }
     }
     
-    private function truncate(string $string, int $length = 1000): string
-    {
-        return strlen($string) > $length ? substr($string, 0, $length) . '... (truncated)' : $string;
-    }
 }

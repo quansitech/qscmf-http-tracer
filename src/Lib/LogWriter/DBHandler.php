@@ -3,8 +3,9 @@
 namespace Qscmf\HttpTracer\Lib\LogWriter;
 
 use Qscmf\HttpTracer\Lib\Helper;
+use Monolog\Handler\AbstractProcessingHandler;
 
-class DBLogWriter implements LogWriterInterface
+class DBHandler extends AbstractProcessingHandler implements LogWriterInterface
 {
 
     private string $table_name;
@@ -12,6 +13,42 @@ class DBLogWriter implements LogWriterInterface
     public function __construct()
     {
         $this->table_name = Helper::getTableName();
+    }
+
+    protected function write(array $record): void
+    {
+        if (!isset($record['context']['stage'])) {
+            return;
+        }
+
+        $context = $record['context'];
+
+        try {
+            switch ($context['stage']) {
+                case 'start':
+                    $this->writeRequest(
+                        $context['unique_id'],
+                        $context['start_time'],
+                        $context['method'],
+                        $context['url'],
+                        $context['request_headers'],
+                        $context['request_body']
+                    );
+                    break;
+
+                case 'end':
+                    $this->writeResponse(
+                        $context['unique_id'],
+                        $context['response_status_code'],
+                        $context['response_headers'],
+                        $context['response_body'],
+                        $context['duration_ms']
+                    );
+                    break;
+            }
+        } catch (\PDOException $e) {
+            error_log("TraceDatabaseHandler failed: " . $e->getMessage());
+        }
     }
 
     public function writeRequest(string $uniqueId, \DateTimeImmutable $startTime, string $method, string $url, array $requestHeaders, string $requestBody): void
