@@ -5,19 +5,19 @@ namespace Qscmf\HttpTracer\Lib\LogWriter;
 interface LogWriterInterface
 {
     public function writeRequest(
-        string $uniqueId, 
-        \DateTimeImmutable $startTime, 
+        string $trace_id, 
+        \DateTimeImmutable $start_time, 
         string $method, 
         string $url, 
-        array $requestHeaders, 
-        string $requestBody
+        array $request_headers, 
+        string $request_body
     ): void;
 
     public function writeResponse(
-        string $uniqueId, 
-        int $responseStatusCode, 
-        array $responseHeaders, 
-        string $responseBody, 
-        float $durationMs
+        string $trace_id, 
+        int $response_status_code, 
+        array $response_headers, 
+        string $response_body, 
+        float $duration_ms
     ): void;
 }

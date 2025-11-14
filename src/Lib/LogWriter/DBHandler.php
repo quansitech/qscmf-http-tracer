@@ -53,7 +53,7 @@ class DBHandler extends AbstractProcessingHandler implements LogWriterInterface
         }
     }
 
-    public function writeRequest(string $uniqueId, \DateTimeImmutable $startTime, string $method, string $url, array $requestHeaders, string $requestBody): void
+    public function writeRequest(string $trace_id, \DateTimeImmutable $start_time, string $method, string $url, array $request_headers, string $request_body): void
     {
         try {
             $data = [
@@ -66,24 +66,24 @@ class DBHandler extends AbstractProcessingHandler implements LogWriterInterface
             ];
 
             $bind = [
-                ':trace_id' => $uniqueId,
+                ':trace_id' => $trace_id,
                 ':method' => $method,
                 ':url' => $url,
-                ':request_headers' => json_encode($requestHeaders),
-                ':request_body' => $requestBody,
-                ':create_date' => $startTime->format('Y-m-d H:i:s.u'),
+                ':request_headers' => json_encode($request_headers),
+                ':request_body' => $request_body,
+                ':create_date' => $start_time->format('Y-m-d H:i:s.u'),
             ];
 
             $r = D()->table($this->table_name)->bind($bind)->add($data);
 
         } catch (\PDOException $e) {
-            $this->logError($e, 'start', $uniqueId, 'write_request_failed');
+            $this->logError($e, 'start', $trace_id, 'write_request_failed');
         } catch (\Exception $e) {
-            $this->logError($e, 'start', $uniqueId, 'write_request_exception');
+            $this->logError($e, 'start', $trace_id, 'write_request_exception');
         }
     }
 
-    public function writeResponse(string $uniqueId, int $responseStatusCode, array $responseHeaders, string $responseBody, float $durationMs): void
+    public function writeResponse(string $trace_id, int $response_status_code, array $response_headers, string $response_body, float $duration_ms): void
     {
         try {
 
@@ -96,31 +96,31 @@ class DBHandler extends AbstractProcessingHandler implements LogWriterInterface
             ];
 
             $bind = [
-                ':response_status_code' => $responseStatusCode,
-                ':response_headers' => json_encode($responseHeaders),
-                ':response_body' => $responseBody,
-                ':duration_ms' => $durationMs,
-                ':trace_id' => $uniqueId,
+                ':response_status_code' => $response_status_code,
+                ':response_headers' => json_encode($response_headers),
+                ':response_body' => $response_body,
+                ':duration_ms' => $duration_ms,
+                ':trace_id' => $trace_id,
             ];
 
             $r = D()->table($this->table_name)->bind($bind)->where(['trace_id' => ':trace_id'])->save($data);
 
         } catch (\PDOException $e) {
-            $this->logError($e, 'end', $uniqueId, 'write_response_failed');
+            $this->logError($e, 'end', $trace_id, 'write_response_failed');
         } catch (\Exception $e) {
-            $this->logError($e, 'end', $uniqueId, 'write_response_exception');
+            $this->logError($e, 'end', $trace_id, 'write_response_exception');
         }
     }
 
     /**
      * 记录错误日志，提供详细上下文信息
      */
-    private function logError(\Exception $e, string $stage, string $uniqueId, string $context = ''): void
+    private function logError(\Exception $e, string $stage, string $trace_id, string $context = ''): void
     {
         $message = sprintf(
             "QSCMF HTTP Tracer Error [stage:%s, trace_id:%s, context:%s]: %s in %s:%d",
             $stage,
-            $uniqueId,
+            $trace_id,
             $context ?: 'general',
             $e->getMessage(),
             $e->getFile(),

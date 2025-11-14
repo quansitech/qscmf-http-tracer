@@ -19,37 +19,36 @@ class GuzzleLoggingMiddleware
     public function __invoke(callable $handler): callable
     {
         return function (RequestInterface $request, array $options) use ($handler) {
-            $startTime = microtime(true);
+            $start_time = microtime(true);
             
-            $uniqueId = $this->logger->start(
+            $trace_id = $this->logger->start(
                 $request->getMethod(),
                 (string) $request->getUri(),
                 $request->getHeaders(),
                 (string) $request->getBody()
             );
 
-            $request = $request->withHeader('X-Trace-ID', $uniqueId);
+            $request = $request->withHeader('X-Trace-ID', $trace_id);
             $promise = $handler($request, $options);
 
             return $promise->then(
-                function (ResponseInterface $response) use ($uniqueId, $startTime) {
-                    $duration = (microtime(true) - $startTime) * 1000;
-                    $bodyContent = $response->getBody()->getContents();
-                    // After getting contents, the stream is empty. We need to rewind it.
+                function (ResponseInterface $response) use ($trace_id, $start_time) {
+                    $duration = (microtime(true) - $start_time) * 1000;
+                    $body_content = $response->getBody()->getContents();
                     $response->getBody()->rewind();
                     $this->logger->finish(
-                        $uniqueId,
+                        $trace_id,
                         $response->getStatusCode(),
                         $response->getHeaders(),
-                        $bodyContent,
+                        $body_content,
                         $duration
                     );
                     return $response;
                 },
-                function (\Exception $reason) use ($uniqueId, $startTime) {
-                    $duration = (microtime(true) - $startTime) * 1000;
+                function (\Exception $reason) use ($trace_id, $start_time) {
+                    $duration = (microtime(true) - $start_time) * 1000;
                     $this->logger->finish(
-                        $uniqueId,
+                        $trace_id,
                         0,
                         [],
                         $reason->getMessage(),

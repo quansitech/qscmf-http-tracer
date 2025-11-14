@@ -14,31 +14,31 @@ class MonologLogWriter implements LogWriterInterface
     }
 
     public function writeRequest(
-        string $uniqueId, \DateTimeImmutable $startTime, string $method, 
-        string $url, array $requestHeaders, string $requestBody
+        string $trace_id, \DateTimeImmutable $start_time, string $method, 
+        string $url, array $request_headers, string $request_body
     ): void {
         $this->monolog->info('API Request Trace', [
             'stage' => 'start',
-            'unique_id' => $uniqueId,
-            'start_time' => $startTime,
+            'unique_id' => $trace_id,
+            'start_time' => $start_time,
             'method' => $method,
             'url' => $url,
-            'request_headers' => $requestHeaders,
-            'request_body' => $requestBody,
+            'request_headers' => $request_headers,
+            'request_body' => $request_body,
         ]);
     }
 
     public function writeResponse(
-        string $uniqueId, int $responseStatusCode, array $responseHeaders, 
-        string $responseBody, float $durationMs
+        string $trace_id, int $response_status_code, array $response_headers, 
+        string $response_body, float $duration_ms
     ): void {
         $this->monolog->info('API Request Trace', [
             'stage' => 'end',
-            'unique_id' => $uniqueId,
-            'response_status_code' => $responseStatusCode,
-            'response_headers' => $responseHeaders,
-            'response_body' => $responseBody,
-            'duration_ms' => $durationMs,
+            'unique_id' => $trace_id,
+            'response_status_code' => $response_status_code,
+            'response_headers' => $response_headers,
+            'response_body' => $response_body,
+            'duration_ms' => $duration_ms,
         ]);
     }
     

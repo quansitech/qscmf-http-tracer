@@ -20,7 +20,7 @@ class GuzzleClient
         $stack = HandlerStack::create();
         $middleware = new GuzzleLoggingMiddleware($this->logger);
         $stack->push($middleware, 'logger');
-        $finalConfig = array_merge($config, ['handler' => $stack]);
-        return new Client($finalConfig);
+        $final_config = array_merge($config, ['handler' => $stack]);
+        return new Client($final_config);
     }
 }

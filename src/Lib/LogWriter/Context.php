@@ -15,11 +15,11 @@ class Context{
     public static function buildWriter(string $type):LogWriterInterface{
         switch($type){
             case 'file':
-                $fileMonolog = new Logger('qscmf_http_tracer_file');
+                $file_monolog = new Logger('qscmf_http_tracer_file');
                 $handler = new RotatingFileHandler(Helper::getLogFilePath());
                 $handler->setFormatter(new FileFormatter());
-                $fileMonolog->pushHandler($handler);
-                $logger =  new MonologLogWriter($fileMonolog);
+                $file_monolog->pushHandler($handler);
+                $logger =  new MonologLogWriter($file_monolog);
 
                 break;
 

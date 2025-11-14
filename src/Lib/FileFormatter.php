@@ -13,11 +13,11 @@ class FileFormatter implements FormatterInterface
         }
 
         $context = $record['context'];
-        $logEntry = '';
+        $log_entry = '';
 
         switch ($context['stage']) {
             case 'start':
-                $logEntry = $this->formatRequest(
+                $log_entry = $this->formatRequest(
                     $context['unique_id'],
                     $context['start_time'],
                     $context['method'],
@@ -28,7 +28,7 @@ class FileFormatter implements FormatterInterface
                 break;
 
             case 'end':
-                $logEntry = $this->formatResponse(
+                $log_entry = $this->formatResponse(
                     $context['unique_id'],
                     $context['response_status_code'],
                     $context['response_headers'],
@@ -38,7 +38,7 @@ class FileFormatter implements FormatterInterface
                 break;
         }
 
-        return $logEntry;
+        return $log_entry;
     }
 
     public function formatBatch(array $records): string
@@ -50,35 +50,35 @@ class FileFormatter implements FormatterInterface
         return $message;
     }
 
-    public function formatRequest(string $uniqueId, \DateTimeImmutable $startTime, string $method, string $url, array $requestHeaders, string $requestBody): string
+    public function formatRequest(string $trace_id, \DateTimeImmutable $start_time, string $method, string $url, array $request_headers, string $request_body): string
     {
-        $logEntry = sprintf(
+        $log_entry = sprintf(
             "[%s] [%s] [START] %s %s\n--> Request Headers: %s\n--> Request Body: %s\n---\n",
-            $startTime->format('Y-m-d H:i:s.u'),
-            $uniqueId,
+            $start_time->format('Y-m-d H:i:s.u'),
+            $trace_id,
             $method,
             $url,
-            json_encode($requestHeaders, JSON_UNESCAPED_UNICODE),
-            $requestBody
+            json_encode($request_headers, JSON_UNESCAPED_UNICODE),
+            $request_body
         );
 
-        return $logEntry;
+        return $log_entry;
     }
 
-    public function formatResponse(string $uniqueId, int $responseStatusCode, array $responseHeaders, string $responseBody, float $durationMs): string
+    public function formatResponse(string $trace_id, int $response_status_code, array $response_headers, string $response_body, float $duration_ms): string
     {
-        $logEntry = sprintf(
+        $log_entry = sprintf(
             "[%s] [%s] [END] Status: %d, Duration: %.2f ms\n--> Response Headers: %s\n--> Response Body: %s\n%s\n\n",
             (new \DateTimeImmutable('now'))->format('Y-m-d H:i:s.u'),
-            $uniqueId,
-            $responseStatusCode,
-            $durationMs,
-            json_encode($responseHeaders, JSON_UNESCAPED_UNICODE),
-            $this->truncate($responseBody),
+            $trace_id,
+            $response_status_code,
+            $duration_ms,
+            json_encode($response_headers, JSON_UNESCAPED_UNICODE),
+            $this->truncate($response_body),
             str_repeat('=', 80)
         );
 
-        return $logEntry;
+        return $log_entry;
     }
     
     private function truncate(string $string, int $length = 1000): string

@@ -7,32 +7,32 @@ use Qscmf\HttpTracer\Lib\Helper;
 
 class FileLogWriter  implements LogWriterInterface
 {
-    private string $logFilePath;
+    private string $log_file_path;
     private FileFormatter $file_formatter;
 
-    public function __construct(string $logFilePath = '')
+    public function __construct(string $log_file_path = '')
     {
-        $logFilePath = $logFilePath ?: Helper::getLogFilePath();
-        $directory = dirname($logFilePath);
+        $log_file_path = $log_file_path ?: Helper::getLogFilePath();
+        $directory = dirname($log_file_path);
         if (!is_dir($directory)) {
             mkdir($directory, 0775, true);
         }
-        $this->logFilePath = $logFilePath;
+        $this->log_file_path = $log_file_path;
         $this->file_formatter = new FileFormatter();
     }
 
-    public function writeRequest(string $uniqueId, \DateTimeImmutable $startTime, string $method, string $url, array $requestHeaders, string $requestBody): void
+    public function writeRequest(string $trace_id, \DateTimeImmutable $start_time, string $method, string $url, array $request_headers, string $request_body): void
     {
-        $logEntry = $this->file_formatter->formatRequest(
-            $uniqueId,
-            $startTime,
+        $log_entry = $this->file_formatter->formatRequest(
+            $trace_id,
+            $start_time,
             $method,
             $url,
-            $requestHeaders,
-            $requestBody
+            $request_headers,
+            $request_body
         );
 
-        $r = file_put_contents($this->logFilePath, $logEntry, FILE_APPEND);
+        $r = file_put_contents($this->log_file_path, $log_entry, FILE_APPEND);
 
         if ($r === false) {
             $error = error_get_last();
@@ -40,17 +40,17 @@ class FileLogWriter  implements LogWriterInterface
         }
     }
 
-    public function writeResponse(string $uniqueId, int $responseStatusCode, array $responseHeaders, string $responseBody, float $durationMs): void
+    public function writeResponse(string $trace_id, int $response_status_code, array $response_headers, string $response_body, float $duration_ms): void
     {
-        $logEntry = $this->file_formatter->formatResponse(
-            $uniqueId,
-            $responseStatusCode,
-            $responseHeaders,
-            $responseBody,
-            $durationMs,
+        $log_entry = $this->file_formatter->formatResponse(
+            $trace_id,
+            $response_status_code,
+            $response_headers,
+            $response_body,
+            $duration_ms,
         );
 
-        $r = file_put_contents($this->logFilePath, $logEntry, FILE_APPEND);
+        $r = file_put_contents($this->log_file_path, $log_entry, FILE_APPEND);
 
         if ($r === false) {
             $error = error_get_last();

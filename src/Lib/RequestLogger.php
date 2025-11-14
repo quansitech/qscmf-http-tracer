@@ -14,22 +14,22 @@ class RequestLogger
         $this->writer = $writer;
     }
 
-    public function start(string $method, string $url, array $requestHeaders, string $requestBody): string
+    public function start(string $method, string $url, array $request_headers, string $request_body): string
     {
-        $uniqueId = Str::uuid()->toString();
+        $trace_id = Str::uuid()->toString();
         $this->writer->writeRequest(
-            $uniqueId,
+            $trace_id,
             new \DateTimeImmutable('now'),
             $method,
             $url,
-            $requestHeaders,
-            $requestBody
+            $request_headers,
+            $request_body
         );
-        return $uniqueId;
+        return $trace_id;
     }
 
-    public function finish(string $uniqueId, int $responseStatusCode, array $responseHeaders, string $responseBody, float $durationMs): void
+    public function finish(string $trace_id, int $response_status_code, array $response_headers, string $response_body, float $duration_ms): void
     {
-        $this->writer->writeResponse($uniqueId, $responseStatusCode, $responseHeaders, $responseBody, $durationMs);
+        $this->writer->writeResponse($trace_id, $response_status_code, $response_headers, $response_body, $duration_ms);
     }
 }
