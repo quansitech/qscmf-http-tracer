@@ -2,6 +2,7 @@
 
 namespace Qscmf\HttpTracer\Lib;
 
+use Illuminate\Support\Str;
 use Qscmf\HttpTracer\Lib\LogWriter\LogWriterInterface;
 
 class RequestLogger
@@ -15,7 +16,7 @@ class RequestLogger
 
     public function start(string $method, string $url, array $requestHeaders, string $requestBody): string
     {
-        $uniqueId = bin2hex(random_bytes(16));
+        $uniqueId = Str::uuid()->toString();
         $this->writer->writeRequest(
             $uniqueId,
             new \DateTimeImmutable('now'),

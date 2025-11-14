@@ -37,6 +37,8 @@ class CreateApiRequestsLog extends Migration
             $table->float('duration_ms')->default(null)->nullable(true)->comment("@title=请求耗时(毫秒);");
             $table->timestamp('update_date', 4)->default(DB::raw('CURRENT_TIMESTAMP(4) ON UPDATE CURRENT_TIMESTAMP(4)'));
             $table->timestamp('create_date', 4)->default(DB::raw('CURRENT_TIMESTAMP(4)'));
+
+            $table->unique('trace_id', 'uq_trace_id');
         });
     }
 
