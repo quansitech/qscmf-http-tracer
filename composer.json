@@ -13,8 +13,13 @@
   "require": {
     "php": ">=7.2.0",
     "tiderjian/think-core":  ">=11.0.0",
-    "guzzlehttp/guzzle": "^6.4",
     "monolog/monolog": "^2.0"
+  },
+  "require-dev": {
+      "guzzlehttp/guzzle": "^6.4 || ^7.4" 
+  },
+  "suggest": {
+      "guzzlehttp/guzzle": "To use the Guzzle integration, install Guzzle (^6.4 or ^7.4)."
   },
   "autoload": {
     "psr-4": {

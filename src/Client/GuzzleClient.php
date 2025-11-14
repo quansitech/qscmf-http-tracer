@@ -12,6 +12,11 @@ class GuzzleClient
 
     public function __construct(RequestLogger $logger)
     {
+        if (!class_exists(Client::class)) {
+            throw new \LogicException(
+                'Guzzle is not installed. Please run "composer require guzzlehttp/guzzle" to use the GuzzleClient.'
+            );
+        }
         $this->logger = $logger;
     }
 
