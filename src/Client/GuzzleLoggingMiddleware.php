@@ -20,12 +20,20 @@ class GuzzleLoggingMiddleware
     {
         return function (RequestInterface $request, array $options) use ($handler) {
             $start_time = microtime(true);
+
+            $raw_body = (string) $request->getBody();
+            $request->getBody()->rewind();
+            
+            $request_body = $this->formatBody(
+                $raw_body, 
+                $request->getHeader('Content-Type')[0] ?? ''
+            );
             
             $trace_id = $this->logger->start(
                 $request->getMethod(),
                 (string) $request->getUri(),
                 $request->getHeaders(),
-                (string) $request->getBody()
+                $request_body
             );
 
             $request = $request->withHeader('X-Trace-ID', $trace_id);
@@ -34,8 +42,15 @@ class GuzzleLoggingMiddleware
             return $promise->then(
                 function (ResponseInterface $response) use ($trace_id, $start_time) {
                     $duration = (microtime(true) - $start_time) * 1000;
-                    $body_content = $response->getBody()->getContents();
+
+                    $raw_body = (string) $response->getBody();
                     $response->getBody()->rewind();
+
+                    $body_content = $this->formatBody(
+                        $raw_body, 
+                        $response->getHeader('Content-Type')[0] ?? ''
+                    );
+
                     $this->logger->finish(
                         $trace_id,
                         $response->getStatusCode(),
@@ -59,4 +74,49 @@ class GuzzleLoggingMiddleware
             );
         };
     }
+
+    /**
+     * 格式化 Body：处理编码转换和二进制过滤
+     */
+    private function formatBody(string $content, string $content_type): string
+    {
+        if ($content === '') {
+            return '';
+        }
+
+        // 1. 二进制检查：如果是图片/文件，直接返回摘要，节省内存且防止乱码
+        if ($this->isBinary($content, $content_type)) {
+            $size = strlen($content);
+            return "[Binary Data - Size: {$size} bytes - Type: {$content_type}]";
+        }
+
+        // 2. mb_check_encoding 转换操作
+        if (mb_check_encoding($content, 'UTF-8')) {
+            return $content;
+        }
+
+        // 3. 乱码修复路径：如果不是 UTF-8，尝试用常见的中文编码进行挽救
+        return mb_convert_encoding($content, 'UTF-8', 'GBK, GB18030, BIG5');
+    }
+
+    /**
+     * 判断是否为二进制内容
+     */
+    private function isBinary(string $content, string $content_type): bool
+    {
+        // 1. 白名单策略：只要 Content-Type 包含这些关键词，就认为是文本
+        if (preg_match('/(json|xml|html|text|form-data|javascript|ecmascript)/i', $content_type)) {
+            return false;
+        }
+
+        // 2. 如果 Content-Type 是空的 (或未识别的)，通过检查内容的前 512 字节来判断
+        if ($content !== '') {
+            // 如果包含大量不可打印字符(控制字符)，认为是二进制
+            return preg_match('/[^\x20-\x7E\t\r\n]/', substr($content, 0, 512)) > 0;
+        }
+
+        // 3. 默认有 Content-Type 但不在白名单里 (如 image/png)，认为是二进制
+        return true;
+    }
+
 }

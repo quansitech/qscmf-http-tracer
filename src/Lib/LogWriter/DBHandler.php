@@ -69,7 +69,7 @@ class DBHandler extends AbstractProcessingHandler implements LogWriterInterface
                 ':trace_id' => $trace_id,
                 ':method' => $method,
                 ':url' => $url,
-                ':request_headers' => json_encode($request_headers),
+                ':request_headers' => json_encode($request_headers, JSON_UNESCAPED_UNICODE),
                 ':request_body' => $request_body,
                 ':create_date' => $start_time->format('Y-m-d H:i:s.u'),
             ];
@@ -97,7 +97,7 @@ class DBHandler extends AbstractProcessingHandler implements LogWriterInterface
 
             $bind = [
                 ':response_status_code' => $response_status_code,
-                ':response_headers' => json_encode($response_headers),
+                ':response_headers' => json_encode($response_headers, JSON_UNESCAPED_UNICODE),
                 ':response_body' => $response_body,
                 ':duration_ms' => $duration_ms,
                 ':trace_id' => $trace_id,
