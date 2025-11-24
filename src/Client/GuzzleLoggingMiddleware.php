@@ -6,10 +6,12 @@ namespace Qscmf\HttpTracer\Client;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
 use Qscmf\HttpTracer\Lib\RequestLogger;
+use Psr\Http\Message\StreamInterface;
 
 class GuzzleLoggingMiddleware
 {
     private RequestLogger $logger;
+     private const MAX_LOG_SIZE = 1024 * 1024; 
 
     public function __construct(RequestLogger $logger)
     {
@@ -20,12 +22,8 @@ class GuzzleLoggingMiddleware
     {
         return function (RequestInterface $request, array $options) use ($handler) {
             $start_time = microtime(true);
-
-            $raw_body = (string) $request->getBody();
-            $request->getBody()->rewind();
-            
             $request_body = $this->formatBody(
-                $raw_body, 
+                $this->readStream($request->getBody()), 
                 $request->getHeader('Content-Type')[0] ?? ''
             );
             
@@ -43,11 +41,8 @@ class GuzzleLoggingMiddleware
                 function (ResponseInterface $response) use ($trace_id, $start_time) {
                     $duration = (microtime(true) - $start_time) * 1000;
 
-                    $raw_body = (string) $response->getBody();
-                    $response->getBody()->rewind();
-
                     $body_content = $this->formatBody(
-                        $raw_body, 
+                        $this->readStream($response->getBody()), 
                         $response->getHeader('Content-Type')[0] ?? ''
                     );
 
@@ -73,6 +68,30 @@ class GuzzleLoggingMiddleware
                 }
             );
         };
+    }
+
+     /**
+     * 安全地读取流内容
+     * 既防止了破坏不可倒带的流（导致请求失败），也防止了内存溢出。
+     */
+    private function readStream(StreamInterface $stream): string
+    {
+        // 1. 如果流不可倒带（例如上传大文件），千万别读！读了就回不去了，请求会报错。
+        if (!$stream->isSeekable()) {
+            return '[Stream not seekable - Content ignored]';
+        }
+
+        // 2. 如果流太大（超过阈值），也不要读，防止日志撑爆内存。
+        $size = $stream->getSize();
+        if ($size !== null && $size > self::MAX_LOG_SIZE) {
+            return "[Stream too large ({$size} bytes) - Content ignored]";
+        }
+
+        // 3. 安全读取：读取 -> 转字符串 -> 立即倒带
+        $content = (string) $stream;
+        $stream->rewind();
+
+        return $content;
     }
 
     /**
