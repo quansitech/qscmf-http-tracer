@@ -15,13 +15,14 @@ class DBHandler extends AbstractProcessingHandler implements LogWriterInterface
         $this->table_name = Helper::getTableName();
     }
 
-    protected function write(array $record): void
+    protected function write($record): void
     {
-        if (!isset($record['context']['stage'])) {
+
+        $context = $this->normalizeRecord($record);
+
+        if (!isset($context['stage'])) {
             return;
         }
-
-        $context = $record['context'];
 
         try {
             switch ($context['stage']) {
@@ -125,5 +126,25 @@ class DBHandler extends AbstractProcessingHandler implements LogWriterInterface
         );
         
         error_log($message);
+    }
+
+    private function normalizeRecord($record): array
+    {
+        
+        if (is_array($record)) {
+            return $record['context'] ?? [];
+        }
+
+        
+        if (is_object($record) && method_exists($record, 'toArray')) {
+            return $record->toArray()['context'] ?? [];
+        }
+
+        
+        if (is_object($record) && isset($record->context)) {
+            return (array) $record->context;
+        }
+
+        return [];
     }
 }
